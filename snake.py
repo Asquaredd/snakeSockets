@@ -53,17 +53,33 @@ def update_coordinates(snake):
         sys.stdout.flush()
 
         # Sleep for a short interval to control the update rate
-        time.sleep(1)
+        time.sleep(0.1)
 
 # Create a thread to run the coordinate updater
 coordinate_thread = threading.Thread(target=update_coordinates, args=(snake,))
 coordinate_thread.daemon = True
 coordinate_thread.start()
 
-# Function to display text on the game screen
+# Function to display text on the game screen with a background box
 def display_text(text, x, y, color):
+    # Create a surface for the text with a background box
     text_surface = font.render(text, True, color)
-    screen.blit(text_surface, (x, y))
+    text_rect = text_surface.get_rect()
+    text_rect.topleft = (x, y)
+
+    # Create a slightly opaque background box
+    background_rect = pygame.Rect(x - 5, y - 5, text_rect.width + 10, text_rect.height + 10)
+    pygame.draw.rect(screen, (0, 0, 0, 100), background_rect)
+
+    # Draw the text on the screen
+    screen.blit(text_surface, text_rect)
+
+# Function to handle wrapping around the game screen
+def wrap_around(position):
+    x, y = position
+    x = (x + GRID_SIZE) % GRID_SIZE
+    y = (y + GRID_SIZE) % GRID_SIZE
+    return x, y
 
 # Game loop
 running = True
@@ -87,6 +103,7 @@ while running:
 
     # Update snake's position
     snake_head = (snake[0][0] + current_direction[0], snake[0][1] + current_direction[1])
+    snake_head = wrap_around(snake_head)
     snake.insert(0, snake_head)
 
     # Check for collisions
@@ -114,7 +131,7 @@ while running:
 
     # Display coordinates and size at the top left corner
     display_text(f"Coordinates: {snake[0]}", 10, 10, GOLD)
-    display_text(f"Size: {len(snake)}", 10, 50, RED)
+    display_text(f"Size: {len(snake)}", 10, 50, GOLD)
 
     # Update the display
     pygame.display.flip()
